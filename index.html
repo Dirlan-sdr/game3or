@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Petualangan Jasmani & Kolaborasi Tim - PJOK SMA Fase F</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@700;800&display=swap">
+  
+  <style>
+    * { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #080f1e; color: #f8fafc; overflow-x: hidden; }
+    .font-title { font-family: 'Space Grotesk', sans-serif; }
+    
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 6px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+    /* Custom Animations & Effects */
+    .glow-emerald { box-shadow: 0 0 25px rgba(16, 185, 129, 0.4); }
+    .glow-amber { box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); }
+    .glow-blue { box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
+
+    .draggable-card {
+      cursor: grab;
+      touch-action: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    }
+    .draggable-card:active { cursor: grabbing; transform: scale(1.05); }
+
+    .drop-zone {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .drop-zone.drag-over {
+      background-color: rgba(16, 185, 129, 0.2) !important;
+      border-color: #10b981 !important;
+      transform: scale(1.02);
+    }
+
+    /* Active State Scaling for Whiteboard & Mobile Taps */
+    .btn-active:active { transform: scale(0.96); }
+  </style>
+</head>
+<body class="min-h-screen w-screen flex flex-col justify-between bg-slate-950 text-slate-100 p-2 sm:p-4 select-none">
+
+  <!-- GLOBAL HEADER STATUS BAR -->
+  <header class="w-full max-w-7xl mx-auto bg-slate-900/90 backdrop-blur border border-slate-800 rounded-2xl p-3 sm:p-4 flex flex-wrap justify-between items-center shadow-2xl shrink-0 gap-3 z-20">
+    <div class="flex items-center gap-3">
+      <div class="bg-emerald-500/20 text-emerald-400 p-2.5 sm:p-3 rounded-xl border border-emerald-500/30 text-xl sm:text-2xl">
+        <i class="fa-solid fa-running"></i>
+      </div>
+      <div>
+        <h1 class="font-title text-base sm:text-xl font-extrabold text-white tracking-wide">FIT & COLLABORATE PJOK</h1>
+        <p class="text-xs sm:text-sm text-slate-400 font-medium">SMA Kelas F • Oleh: Dirlan, S.Pd. (SMAN 9 Sidenreng Rappang)</p>
+      </div>
+    </div>
+
+    <!-- PLAYER STATS / DASHBOARD INFO -->
+    <div class="flex items-center gap-2 sm:gap-4 ml-auto">
+      <div id="userInfoHeader" class="hidden sm:flex items-center gap-2 bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-700 text-xs sm:text-sm">
+        <i class="fa-solid fa-user-graduate text-emerald-400"></i>
+        <span id="headerPlayerName" class="font-semibold text-slate-200">Siswa</span>
+        <span id="headerPlayerClass" class="text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">F</span>
+      </div>
+
+      <div class="flex items-center gap-1.5 bg-slate-800/90 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-slate-700">
+        <i class="fa-solid fa-star text-amber-400 text-base sm:text-xl"></i>
+        <span id="gameScore" class="font-bold text-base sm:text-lg text-amber-300">0</span>
+      </div>
+
+      <button id="soundBtn" onclick="toggleAudio()" class="p-2.5 sm:p-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition btn-active" title="Toggle Suara">
+        <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+      </button>
+
+      <button id="homeBtn" onclick="goHome()" class="p-2.5 sm:p-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition btn-active" title="Menu Utama">
+        <i class="fa-solid fa-house"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER (16:9 Adaptable Aspect Ratio Viewport) -->
+  <main class="w-full max-w-7xl mx-auto my-auto flex-grow flex flex-col justify-center items-center relative py-3 my-2">
+
+    <!-- 1. HALAMAN LOGIN / IDENTITAS -->
+    <section id="loginScreen" class="w-full max-w-2xl bg-slate-900/95 backdrop-blur-md rounded-3xl border border-slate-800 p-6 sm:p-10 text-center shadow-2xl my-auto">
+      <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 border border-emerald-500/30 glow-emerald">
+        <i class="fa-solid fa-heart-pulse"></i>
+      </div>
+      <h2 class="font-title text-2xl sm:text-4xl font-black text-white mb-2">Selamat Datang di Arena PJOK</h2>
+      <p class="text-slate-400 text-sm sm:text-base mb-6">Materi: Manfaat Aktivitas Jasmani & Strategi Kolaborasi Kerja Tim</p>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4 text-left max-w-md mx-auto">
+        <div>
+          <label class="block text-xs sm:text-sm font-bold text-slate-300 mb-1">Nama Lengkap Siswa:</label>
+          <div class="relative">
+            <i class="fa-solid fa-user absolute left-4 top-3.5 text-slate-500"></i>
+            <input type="text" id="inputStudentName" required placeholder="Masukkan Nama Lengkap" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-sm sm:text-base transition">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs sm:text-sm font-bold text-slate-300 mb-1">Kelas (Fase F):</label>
+            <div class="relative">
+              <i class="fa-solid fa-chalkboard absolute left-4 top-3.5 text-slate-500"></i>
+              <input type="text" id="inputStudentClass" required placeholder="Contoh: XI-1" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-sm sm:text-base transition">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs sm:text-sm font-bold text-slate-300 mb-1">No. Absen:</label>
+            <div class="relative">
+              <i class="fa-solid fa-hashtag absolute left-4 top-3.5 text-slate-500"></i>
+              <input type="number" id="inputStudentAbsen" required placeholder="01" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-sm sm:text-base transition">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full mt-4 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-lg rounded-2xl shadow-xl transition transform active:scale-98 flex items-center justify-center gap-3 border border-emerald-400/40 glow-emerald">
+          <i class="fa-solid fa-right-to-bracket"></i> MASUK KE GAME
+        </button>
+      </form>
+    </section>
+
+    <!-- 2. DASHBOARD MENU UTAMA -->
+    <section id="mainMenuScreen" class="w-full max-w-4xl bg-slate-900/95 backdrop-blur-md rounded-3xl border border-slate-800 p-6 sm:p-10 text-center shadow-2xl hidden my-auto">
+      <div class="mb-6">
+        <span class="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold mb-2">
+          <i class="fa-solid fa-bolt"></i> Pembelajaran Kinestetik Interaktif
+        </span>
+        <h2 id="welcomeGreeting" class="font-title text-2xl sm:text-4xl font-extrabold text-white">Selamat Datang, Siswa!</h2>
+        <p class="text-slate-400 text-sm sm:text-base mt-1">Pilih menu untuk memulai pembelajaran atau tantangan game.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-left max-w-3xl mx-auto">
+        <button onclick="startLevelSelect()" class="p-5 bg-gradient-to-br from-emerald-600/90 to-teal-800/90 hover:from-emerald-500 hover:to-teal-700 rounded-2xl border border-emerald-400/40 text-white shadow-lg transition transform btn-active flex flex-col justify-between h-36 col-span-1 sm:col-span-2 lg:col-span-1 glow-emerald">
+          <div class="flex justify-between items-start">
+            <i class="fa-solid fa-play-circle text-3xl text-emerald-300"></i>
+            <span class="bg-emerald-400/20 text-emerald-300 text-xs px-2.5 py-1 rounded-full font-bold">3 Level</span>
+          </div>
+          <div>
+            <h3 class="font-title font-bold text-lg text-white">Mulai Bermain</h3>
+            <p class="text-xs text-emerald-100 opacity-80">Tantangan Drag & Drop Kinestetik</p>
+          </div>
+        </button>
+
+        <button onclick="showModalInfo('cpTpModal')" class="p-5 bg-slate-800/80 hover:bg-slate-700/80 rounded-2xl border border-slate-700 text-white transition transform btn-active flex flex-col justify-between h-36">
+          <i class="fa-solid fa-bullseye text-3xl text-amber-400"></i>
+          <div>
+            <h3 class="font-title font-bold text-base">Pendahuluan CP & TP</h3>
+            <p class="text-xs text-slate-400">Capaian & Tujuan Pembelajaran</p>
+          </div>
+        </button>
+
+        <button onclick="showModalInfo('instructionsModal')" class="p-5 bg-slate-800/80 hover:bg-slate-700/80 rounded-2xl border border-slate-700 text-white transition transform btn-active flex flex-col justify-between h-36">
+          <i class="fa-solid fa-circle-info text-3xl text-blue-400"></i>
+          <div>
+            <h3 class="font-title font-bold text-base">Petualangan & Aturan</h3>
+            <p class="text-xs text-slate-400">Panduan cara menyelesaikan tantangan</p>
+          </div>
+        </button>
+
+        <button onclick="showModalInfo('materiModal')" class="p-5 bg-slate-800/80 hover:bg-slate-700/80 rounded-2xl border border-slate-700 text-white transition transform btn-active flex flex-col justify-between h-36">
+          <i class="fa-solid fa-book-open text-3xl text-purple-400"></i>
+          <div>
+            <h3 class="font-title font-bold text-base">Materi Pembelajaran</h3>
+            <p class="text-xs text-slate-400">Ringkasan Manfaat Jasmani & Tim</p>
+          </div>
+        </button>
+
+        <button onclick="showModalInfo('developerModal')" class="p-5 bg-slate-800/80 hover:bg-slate-700/80 rounded-2xl border border-slate-700 text-white transition transform btn-active flex flex-col justify-between h-36 col-span-1 sm:col-span-2 lg:col-span-2">
+          <i class="fa-solid fa-id-card text-3xl text-teal-400"></i>
+          <div>
+            <h3 class="font-title font-bold text-base">Info Pengembang</h3>
+            <p class="text-xs text-slate-400">Dirlan, S.Pd. - Guru SMAN 9 Sidenreng Rappang</p>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <!-- 3. LEVEL SELECTION SCREEN -->
+    <section id="levelSelectScreen" class="w-full max-w-4xl bg-slate-900/95 backdrop-blur-md rounded-3xl border border-slate-800 p-6 sm:p-8 text-center shadow-2xl hidden my-auto">
+      <h2 class="font-title text-2xl sm:text-3xl font-bold text-white mb-2">Pilih Level Tantangan</h2>
+      <p class="text-slate-400 text-xs sm:text-sm mb-6">Selesaikan setiap tantangan untuk membuktikan evaluasi strategi gerak dan kolaborasimu!</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+        <!-- Level 1 Card -->
+        <div onclick="initLevel(1)" class="bg-slate-800/90 border border-slate-700 hover:border-emerald-500/50 p-5 rounded-2xl text-left cursor-pointer transition transform hover:-translate-y-1 btn-active flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <span class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-sm border border-emerald-500/30">1</span>
+              <i class="fa-solid fa-heart-circle-check text-2xl text-emerald-400"></i>
+            </div>
+            <h3 class="font-title font-bold text-white text-base mb-1">Manfaat Aktivitas Jasmani</h3>
+            <p class="text-xs text-slate-400">Mengkategorikan manfaat fisik, mental/psikologis, dan sosial.</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-700/60 flex justify-between items-center text-xs text-emerald-400 font-bold">
+            <span>Tantangan Drag & Drop</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+        </div>
+
+        <!-- Level 2 Card -->
+        <div onclick="initLevel(2)" class="bg-slate-800/90 border border-slate-700 hover:border-amber-500/50 p-5 rounded-2xl text-left cursor-pointer transition transform hover:-translate-y-1 btn-active flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <span class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center text-sm border border-amber-500/30">2</span>
+              <i class="fa-solid fa-people-group text-2xl text-amber-400"></i>
+            </div>
+            <h3 class="font-title font-bold text-white text-base mb-1">Strategi Kerja Tim</h3>
+            <p class="text-xs text-slate-400">Menyusun urutan alur pengambilan keputusan tim dalam simulasi gerak.</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-700/60 flex justify-between items-center text-xs text-amber-400 font-bold">
+            <span>Tantangan Urutan Gerak</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+        </div>
+
+        <!-- Level 3 Card -->
+        <div onclick="initLevel(3)" class="bg-slate-800/90 border border-slate-700 hover:border-blue-500/50 p-5 rounded-2xl text-left cursor-pointer transition transform hover:-translate-y-1 btn-active flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <span class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center text-sm border border-blue-500/30">3</span>
+              <i class="fa-solid fa-crown text-2xl text-blue-400"></i>
+            </div>
+            <h3 class="font-title font-bold text-white text-base mb-1">Kepemimpinan Efektif</h3>
+            <p class="text-xs text-slate-400">Membedakan tindakan Kepemimpinan Efektif vs Kurang Efektif.</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-700/60 flex justify-between items-center text-xs text-blue-400 font-bold">
+            <span>Evaluasi Peran Tim</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. GAME ARENA SCREEN -->
+    <section id="gameArenaScreen" class="w-full max-w-6xl bg-slate-900/90 backdrop-blur-md rounded-3xl border border-slate-800 p-4 sm:p-6 shadow-2xl hidden flex flex-col justify-between my-auto min-h-[500px]">
+      
+      <!-- LEVEL TITLE & INSTRUCTION HEADER -->
+      <div class="bg-slate-800/80 p-3 sm:p-4 rounded-2xl border border-slate-700/80 mb-4 flex flex-wrap justify-between items-center gap-2">
+        <div class="flex items-center gap-3">
+          <span id="levelBadge" class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full font-bold text-xs sm:text-sm">LEVEL 1</span>
+          <h3 id="levelTitle" class="font-title text-sm sm:text-lg font-bold text-white">Klasifikasi Manfaat Aktivitas Jasmani</h3>
+        </div>
+        <p id="levelInstruction" class="text-xs sm:text-sm text-slate-300 italic w-full sm:w-auto">
+          Tarik (Drag) kartu manfaat ke kotak kategori yang tepat di bawah ini!
+        </p>
+      </div>
+
+      <!-- DYNAMIC GAME CONTAINER (DRAG & DROP CONTENT) -->
+      <div id="gameContentArea" class="flex-grow flex flex-col justify-center my-2">
+        <!-- Rendered by JavaScript dynamically per level -->
+      </div>
+
+      <!-- LEVEL ACTION FOOTER -->
+      <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center">
+        <button onclick="startLevelSelect()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm rounded-xl font-bold transition btn-active flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i> Pilih Level
+        </button>
+        <button id="resetLevelBtn" onclick="resetCurrentLevel()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs sm:text-sm rounded-xl font-bold transition btn-active flex items-center gap-2">
+          <i class="fa-solid fa-rotate-right"></i> Ulangi Level
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODALS SYSTEM (PRE-GAME STUDY, CP-TP, PETUNJUK, MATERI, DEVELOPER) -->
+  
+  <!-- CP / TP MODAL -->
+  <div id="cpTpModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+        <h3 class="font-title text-xl font-bold text-amber-400 flex items-center gap-2">
+          <i class="fa-solid fa-bullseye"></i> Capaian & Tujuan Pembelajaran
+        </h3>
+        <button onclick="closeModalInfo('cpTpModal')" class="text-slate-400 hover:text-white p-2 text-xl"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+        <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700">
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">Capaian Pembelajaran (CP) - PJOK SMA Fase F:</h4>
+          <p>Peserta didik mengadaptasi dan mengevaluasi strategi gerak yang telah dikuasai dalam situasi gerak baru yang menantang. Peserta didik merancang dan mengevaluasi strategi pengambilan keputusan dalam kerja tim yang mempertunjukkan keterampilan kepemimpinan dan kolaborasi.</p>
+        </div>
+        <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700">
+          <h4 class="font-bold text-white text-sm mb-2 text-amber-400">Tujuan Pembelajaran (TP):</h4>
+          <ul class="list-disc pl-5 space-y-1.5">
+            <li>Menerapkan dan mengadaptasi strategi gerak dalam situasi permainan baru atau dimodifikasi.</li>
+            <li>Mengevaluasi efektivitas strategi gerak yang dipilih serta mengembangkan alternatif strategi.</li>
+            <li>Mengidentifikasi peran individu dan tugas dalam kerja tim pada kegiatan jasmani.</li>
+            <li>Menjelaskan strategi pengambilan keputusan dan membedakan kepemimpinan efektif/kurang efektif.</li>
+            <li>Menerapkan strategi kepemimpinan dan menunjukkan keterampilan kolaboratif dalam simulasi aktivitas jasmani.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PETUNJUK GAME MODAL -->
+  <div id="instructionsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xl w-full shadow-2xl">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+        <h3 class="font-title text-xl font-bold text-blue-400 flex items-center gap-2">
+          <i class="fa-solid fa-gamepad"></i> Petunjuk Permainan
+        </h3>
+        <button onclick="closeModalInfo('instructionsModal')" class="text-slate-400 hover:text-white p-2 text-xl"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="space-y-3 text-xs sm:text-sm text-slate-300">
+        <div class="flex items-start gap-3 bg-slate-800/60 p-3.5 rounded-xl border border-slate-700">
+          <i class="fa-solid fa-hand-pointer text-xl text-emerald-400 mt-1"></i>
+          <div><b>Sentuh & Tarik (Drag & Drop):</b> Gunakan jari pada Layar Sentuh / Smart Board atau Klik & Tahan Mouse di Laptop PC untuk menggeser kartu ke kotak jawaban.</div>
+        </div>
+        <div class="flex items-start gap-3 bg-slate-800/60 p-3.5 rounded-xl border border-slate-700">
+          <i class="fa-solid fa-layer-group text-xl text-amber-400 mt-1"></i>
+          <div><b>Tanpa Soal Pilihan Ganda:</b> Semua tantangan berbentuk kinestetik matching, urutan alur (sequencing), dan pemilahan kategori.</div>
+        </div>
+        <div class="flex items-start gap-3 bg-slate-800/60 p-3.5 rounded-xl border border-slate-700">
+          <i class="fa-solid fa-award text-xl text-blue-400 mt-1"></i>
+          <div><b>Skor & Bintang:</b> Dapatkan poin setiap kali memasangkan jawaban dengan benar dan selesaikan semua level untuk lulus!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATERI PEMBELAJARAN MODAL -->
+  <div id="materiModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+        <h3 class="font-title text-xl font-bold text-purple-400 flex items-center gap-2">
+          <i class="fa-solid fa-book-open"></i> Rangkuman Materi Pembelajaran
+        </h3>
+        <button onclick="closeModalInfo('materiModal')" class="text-slate-400 hover:text-white p-2 text-xl"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+        <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700">
+          <h4 class="font-bold text-emerald-400 text-sm mb-1">1. Manfaat Aktivitas Jasmani Teratur</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><b>Manfaat Fisik:</b> Meningkatkan daya tahan jantung-paru (kardiovaskular), kekuatan otot, menjaga berat badan ideal, dan kualitas tidur.</li>
+            <li><b>Manfaat Mental/Psikologis:</b> Mengurangi stres dan kecemasan, meningkatkan mood, fokus belajar, serta kepercayaan diri.</li>
+            <li><b>Manfaat Sosial:</b> Mempererat pertemanan, melatih komunikasi, serta menumbuhkan kebiasaan sportivitas.</li>
+          </ul>
+        </div>
+        <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700">
+          <h4 class="font-bold text-amber-400 text-sm mb-1">2. Strategi Pengambilan Keputusan dalam Kerja Tim</h4>
+          <p class="mb-2">Kerja tim yang efektif dalam olahraga membutuhkan tahapan berikut:</p>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li><b>Analisis Situasi Lapangan:</b> Memahami posisi lawan dan kawan.</li>
+            <li><b>Komunikasi Aktif:</b> Memberikan instruksi atau sinyal gerak secara jelas.</li>
+            <li><b>Eksekusi Peran Spesifik:</b> Setiap anggota menjalankan tugas (misal: menyerang, bertahan, mensupport).</li>
+            <li><b>Evaluasi Strategi:</b> Penyesuaian taktik saat jeda atau situasi gerak baru.</li>
+          </ol>
+        </div>
+        <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700">
+          <h4 class="font-bold text-blue-400 text-sm mb-1">3. Kepemimpinan Efektif dalam Aktivitas Jasmani</h4>
+          <p>Pemimpin tim yang efektif selalu memberi semangat, mendengarkan masukan, adil dalam pembagian peran, serta fokus pada solusi saat mengalami kendala gerak.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEVELOPER INFO MODAL -->
+  <div id="developerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl">
+      <div class="w-20 h-20 bg-teal-500/20 text-teal-400 rounded-full flex items-center justify-center text-4xl mx-auto mb-3 border border-teal-500/30">
+        <i class="fa-solid fa-user-tie"></i>
+      </div>
+      <h3 class="font-title text-xl font-bold text-white mb-1">Dirlan, S.Pd.</h3>
+      <p class="text-xs text-teal-400 font-bold mb-4">Guru PJOK SMAN 9 Sidenreng Rappang</p>
+      
+      <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 text-left text-xs text-slate-300 space-y-2 mb-6">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-school text-slate-400"></i>
+          <span><b>Instansi:</b> SMAN 9 Sidenreng Rappang</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-graduation-cap text-slate-400"></i>
+          <span><b>Sasaran:</b> SMA Kelas F (PJOK)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-laptop-code text-slate-400"></i>
+          <span><b>Spesifikasi:</b> Gim Edukasi Kinestetik Touchscreen Ready</span>
+        </div>
+      </div>
+
+      <button onclick="closeModalInfo('developerModal')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition">Tutup</button>
+    </div>
+  </div>
+
+  <!-- LEVEL COMPLETE / VICTORY MODAL -->
+  <div id="victoryModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-900 border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl glow-emerald">
+      <div id="victoryIcon" class="text-5xl sm:text-6xl text-amber-400 mb-3 animate-bounce">
+        <i class="fa-solid fa-trophy"></i>
+      </div>
+      <h3 id="victoryTitle" class="font-title text-2xl sm:text-3xl font-extrabold text-white mb-2">Tantangan Selesai!</h3>
+      <p id="victoryDesc" class="text-slate-300 text-xs sm:text-sm mb-6 leading-relaxed">Kamu berhasil menyelesaikan tantangan strategi dan kolaborasi PJOK dengan sangat luar biasa!</p>
+      
+      <div class="bg-slate-800/90 p-4 rounded-2xl border border-slate-700 mb-6 flex justify-around items-center">
+        <div>
+          <span class="block text-xs text-slate-400">Total Skor</span>
+          <span id="victoryScore" class="font-title text-2xl font-bold text-amber-300">0</span>
+        </div>
+        <div class="h-8 w-px bg-slate-700"></div>
+        <div>
+          <span class="block text-xs text-slate-400">Status</span>
+          <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-full font-bold border border-emerald-500/30">LULUS</span>
+        </div>
+      </div>
+
+      <button id="victoryNextBtn" onclick="nextLevelAction()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-base rounded-2xl shadow-lg transition btn-active">
+        Lanjut Tantangan Berikutnya <i class="fa-solid fa-arrow-right ml-1"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- GLOBAL FOOTER -->
+  <footer class="w-full max-w-7xl mx-auto text-center text-xs text-slate-500 py-2 mt-auto flex flex-wrap justify-between items-center border-t border-slate-800/60 shrink-0 gap-2">
+    <div>
+      <i class="fa-solid fa-chalkboard-user text-emerald-500"></i> Media Edukasi PJOK SMA Fase F • Smart Interactive Whiteboard & Touch Friendly
+    </div>
+    <div>
+      Pengembang: <b>Dirlan, S.Pd.</b> (SMAN 9 Sidenreng Rappang)
+    </div>
+  </footer>
+
+  <!-- GAME LOGIC SCRIPT (WEB AUDIO + DRAG & DROP ENGINE) -->
+  <script>
+    // --- WEB AUDIO API SYNTHESIZER ---
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'drag') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.04);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.04);
+        osc.start(now);
+        osc.stop(now + 0.04);
+      } else if (type === 'correct') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(240, now);
+        osc.frequency.setValueAtTime(160, now + 0.12);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === 'win') {
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.connect(g);
+          g.connect(audioCtx.destination);
+          o.frequency.setValueAtTime(freq, now + idx * 0.1);
+          g.gain.setValueAtTime(0.18, now + idx * 0.1);
+          g.gain.linearRampToValueAtTime(0.01, now + idx * 0.1 + 0.22);
+          o.start(now + idx * 0.1);
+          o.stop(now + idx * 0.1 + 0.22);
+        });
+      }
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('soundIcon');
+      if (soundEnabled) {
+        icon.className = 'fa-solid fa-volume-high';
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-red-400';
+      }
+    }
+
+    // --- STATE MANAGEMENT ---
+    let studentData = { name: '', class: '', absen: '' };
+    let currentLevel = 1;
+    let score = 0;
+    let levelMatchesCount = 0;
+    let draggedElement = null;
+
+    // --- LOGIN & NAVIGATION ---
+    function handleLogin(e) {
+      e.preventDefault();
+      initAudio();
+      playSound('correct');
+
+      studentData.name = document.getElementById('inputStudentName').value.trim();
+      studentData.class = document.getElementById('inputStudentClass').value.trim();
+      studentData.absen = document.getElementById('inputStudentAbsen').value.trim();
+
+      document.getElementById('headerPlayerName').innerText = studentData.name;
+      document.getElementById('headerPlayerClass').innerText = studentData.class;
+      document.getElementById('welcomeGreeting').innerText = `Selamat Datang, ${studentData.name}!`;
+
+      document.getElementById('userInfoHeader').classList.remove('hidden');
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainMenuScreen').classList.remove('hidden');
+    }
+
+    function goHome() {
+      playSound('drag');
+      hideAllScreens();
+      if (studentData.name) {
+        document.getElementById('mainMenuScreen').classList.remove('hidden');
+      } else {
+        document.getElementById('loginScreen').classList.remove('hidden');
+      }
+    }
+
+    function startLevelSelect() {
+      playSound('drag');
+      hideAllScreens();
+      document.getElementById('levelSelectScreen').classList.remove('hidden');
+    }
+
+    function hideAllScreens() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainMenuScreen').classList.add('hidden');
+      document.getElementById('levelSelectScreen').classList.add('hidden');
+      document.getElementById('gameArenaScreen').classList.add('hidden');
+    }
+
+    function showModalInfo(id) {
+      playSound('drag');
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModalInfo(id) {
+      playSound('drag');
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    // --- LEVEL DATA & ENGINE ---
+
+    // LEVEL 1: Categorization of Physical Activity Benefits
+    const level1Categories = [
+      { id: 'fisik', title: 'Manfaat Fisik', icon: 'fa-heart-pulse', color: 'emerald' },
+      { id: 'mental', title: 'Manfaat Mental / Psikologis', icon: 'fa-brain', color: 'amber' },
+      { id: 'sosial', title: 'Manfaat Sosial', icon: 'fa-users', color: 'blue' }
+    ];
+
+    const level1Cards = [
+      { id: 'c1', cat: 'fisik', text: 'Meningkatkan Daya Tahan Jantung & Paru' },
+      { id: 'c2', cat: 'mental', text: 'Mengurangi Stres & Meningkatkan Mood' },
+      { id: 'c3', cat: 'sosial', text: 'Melatih Kerjasama & Komunikasi Tim' },
+      { id: 'c4', cat: 'fisik', text: 'Menjaga Berat Badan & Otot Kuat' },
+      { id: 'c5', cat: 'mental', text: 'Meningkatkan Fokus & Kepercayaan Diri' },
+      { id: 'c6', cat: 'sosial', text: 'Menumbuhkan Sikap Sportivitas' }
+    ];
+
+    // LEVEL 2: Sequence of Team Decision Making
+    const level2Sequence = [
+      { step: 1, text: 'Menganalisis Situasi Perubahan Taktik Lawan' },
+      { step: 2, text: 'Melakukan Komunikasi Instruksi Cepat di Lapangan' },
+      { step: 3, text: 'Menyesuaikan Peran & Tugas Anggota Tim' },
+      { step: 4, text: 'Mengevaluasi Hasil Strategi Usai Aktivitas' }
+    ];
+
+    // LEVEL 3: Leadership Effectiveness Matching
+    const level3Categories = [
+      { id: 'efektif', title: 'Kepemimpinan Efektif', icon: 'fa-crown', color: 'emerald' },
+      { id: 'kurang', title: 'Kepemimpinan Kurang Efektif', icon: 'fa-triangle-exclamation', color: 'rose' }
+    ];
+
+    const level3Cards = [
+      { id: 'l1', cat: 'efektif', text: 'Mendengarkan Masukan Anggota Tim saat Buntu' },
+      { id: 'l2', cat: 'kurang', text: 'Menyalahkan Teman Saat Terjadi Kesalahan Strategi' },
+      { id: 'l3', cat: 'efektif', text: 'Membagi Tugas Sesuai Keahlian Individu' },
+      { id: 'l4', cat: 'kurang', text: 'Mengambil Keputusan Sendiri Tanpa Diskusi Tim' }
+    ];
+
+    // --- LEVEL INITIALIZATION ---
+    function initLevel(lvl) {
+      currentLevel = lvl;
+      levelMatchesCount = 0;
+      hideAllScreens();
+      document.getElementById('gameArenaScreen').classList.remove('hidden');
+
+      const levelBadge = document.getElementById('levelBadge');
+      const levelTitle = document.getElementById('levelTitle');
+      const levelInstruction = document.getElementById('levelInstruction');
+      const container = document.getElementById('gameContentArea');
+
+      container.innerHTML = '';
+
+      if (lvl === 1) {
+        levelBadge.innerText = 'LEVEL 1';
+        levelTitle.innerText = 'Klasifikasi Manfaat Aktivitas Jasmani';
+        levelInstruction.innerText = 'Tarik (Drag) kartu manfaat di bawah ke dalam kategori yang tepat!';
+
+        renderCategoryMatchingGame(container, level1Categories, level1Cards);
+      } else if (lvl === 2) {
+        levelBadge.innerText = 'LEVEL 2';
+        levelTitle.innerText = 'Alur Strategi Pengambilan Keputusan Tim';
+        levelInstruction.innerText = 'Susun urutan alur pengambilan keputusan tim secara runtut dari langkah 1 sampai 4!';
+
+        renderSequenceBuilderGame(container, level2Sequence);
+      } else if (lvl === 3) {
+        levelBadge.innerText = 'LEVEL 3';
+        levelTitle.innerText = 'Evaluasi Peran Kepemimpinan Tim';
+        levelInstruction.innerText = 'Pilah tindakan ke dalam kelompok Kepemimpinan Efektif atau Kurang Efektif!';
+
+        renderCategoryMatchingGame(container, level3Categories, level3Cards);
+      }
+    }
+
+    function resetCurrentLevel() {
+      playSound('drag');
+      initLevel(currentLevel);
+    }
+
+    // --- RENDER GAME MODE 1 & 3: CATEGORY MATCHING (DRAG & DROP) ---
+    function renderCategoryMatchingGame(container, categories, cards) {
+      // Shuffle Cards
+      const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
+
+      // Create Drop Target Zones Container
+      const targetsGrid = document.createElement('div');
+      targetsGrid.className = `grid grid-cols-1 md:grid-cols-${categories.length} gap-3 sm:gap-4 mb-6`;
+
+      categories.forEach(cat => {
+        const zone = document.createElement('div');
+        zone.className = `drop-zone bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-2xl p-4 flex flex-col justify-start min-h-[160px] shadow-inner`;
+        zone.dataset.category = cat.id;
+
+        zone.innerHTML = `
+          <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-800">
+            <i class="fa-solid ${cat.icon} text-${cat.color}-400 text-lg sm:text-xl"></i>
+            <h4 class="font-title font-bold text-white text-sm sm:text-base">${cat.title}</h4>
+          </div>
+          <div class="drop-target-content space-y-2 flex-grow flex flex-col justify-center items-center text-slate-500 text-xs italic">
+            <span>Letakkan kartu di sini</span>
+          </div>
+        `;
+
+        // Event Listeners for Drag and Drop
+        zone.addEventListener('dragover', handleDragOver);
+        zone.addEventListener('dragleave', handleDragLeave);
+        zone.addEventListener('drop', (e) => handleCategoryDrop(e, cards.length));
+
+        targetsGrid.appendChild(zone);
+      });
+
+      container.appendChild(targetsGrid);
+
+      // Create Draggable Cards Container
+      const cardsBox = document.createElement('div');
+      cardsBox.id = 'draggableCardsBox';
+      cardsBox.className = 'flex flex-wrap justify-center gap-2.5 sm:gap-3 bg-slate-800/60 p-4 rounded-2xl border border-slate-700/80';
+
+      shuffledCards.forEach(card => {
+        const cardEl = createDraggableCard(card.id, card.cat, card.text);
+        cardsBox.appendChild(cardEl);
+      });
+
+      container.appendChild(cardsBox);
+    }
+
+    // Helper: Create Draggable HTML Card
+    function createDraggableCard(id, category, text) {
+      const card = document.createElement('div');
+      card.className = 'draggable-card bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-100 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-md w-full sm:w-auto text-left';
+      card.draggable = true;
+      card.dataset.id = id;
+      card.dataset.category = category;
+      card.innerHTML = `<i class="fa-solid fa-grip-vertical text-slate-500"></i> <span>${text}</span>`;
+
+      // PC Mouse Drag Events
+      card.addEventListener('dragstart', handleDragStart);
+      card.addEventListener('dragend', handleDragEnd);
+
+      // Touchscreen Drag Emulation Support
+      setupTouchEvents(card);
+
+      return card;
+    }
+
+    // --- RENDER GAME MODE 2: SEQUENCE BUILDER ---
+    function renderSequenceBuilderGame(container, sequenceData) {
+      const shuffled = [...sequenceData].sort(() => Math.random() - 0.5);
+
+      const seqGrid = document.createElement('div');
+      seqGrid.className = 'grid grid-cols-1 md:grid-cols-4 gap-3 mb-6';
+
+      sequenceData.forEach((seq) => {
+        const slot = document.createElement('div');
+        slot.className = 'drop-zone bg-slate-950/80 border-2 border-dashed border-slate-700 rounded-2xl p-4 flex flex-col justify-start min-h-[150px]';
+        slot.dataset.step = seq.step;
+
+        slot.innerHTML = `
+          <div class="flex justify-between items-center mb-2 pb-2 border-b border-slate-800">
+            <span class="text-xs font-bold bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full border border-amber-500/30">Langkah ${seq.step}</span>
+            <i class="fa-solid fa-arrow-down-short-wide text-slate-600"></i>
+          </div>
+          <div class="drop-target-content space-y-2 flex-grow flex flex-col justify-center items-center text-slate-500 text-xs italic">
+            <span>Tarik langkah ke-${seq.step} di sini</span>
+          </div>
+        `;
+
+        slot.addEventListener('dragover', handleDragOver);
+        slot.addEventListener('dragleave', handleDragLeave);
+        slot.addEventListener('drop', (e) => handleSequenceDrop(e, sequenceData.length));
+
+        seqGrid.appendChild(slot);
+      });
+
+      container.appendChild(seqGrid);
+
+      // Cards to drag
+      const cardsBox = document.createElement('div');
+      cardsBox.id = 'draggableCardsBox';
+      cardsBox.className = 'flex flex-wrap justify-center gap-3 bg-slate-800/60 p-4 rounded-2xl border border-slate-700/80';
+
+      shuffled.forEach((item) => {
+        const card = document.createElement('div');
+        card.className = 'draggable-card bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-100 px-4 py-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-md w-full sm:w-auto text-left';
+        card.draggable = true;
+        card.dataset.id = item.step;
+        card.dataset.step = item.step;
+        card.innerHTML = `<i class="fa-solid fa-grip-vertical text-slate-500"></i> <span>${item.text}</span>`;
+
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+        setupTouchEvents(card);
+
+        cardsBox.appendChild(card);
+      });
+
+      container.appendChild(cardsBox);
+    }
+
+    // --- DRAG AND DROP HANDLERS ---
+    function handleDragStart(e) {
+      draggedElement = this;
+      e.dataTransfer.setData('text/plain', this.dataset.id);
+      this.classList.add('opacity-40');
+      playSound('drag');
+    }
+
+    function handleDragEnd() {
+      this.classList.remove('opacity-40');
+      draggedElement = null;
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      this.classList.add('drag-over');
+    }
+
+    function handleDragLeave() {
+      this.classList.remove('drag-over');
+    }
+
+    // Drop Handler for Category Matching (Levels 1 & 3)
+    function handleCategoryDrop(e, totalCards) {
+      e.preventDefault();
+      const zone = e.currentTarget;
+      zone.classList.remove('drag-over');
+
+      if (!draggedElement) return;
+
+      const cardCategory = draggedElement.dataset.category;
+      const targetCategory = zone.dataset.category;
+
+      if (cardCategory === targetCategory) {
+        playSound('correct');
+        score += 50;
+        levelMatchesCount++;
+        updateScoreDisplay();
+
+        const contentSlot = zone.querySelector('.drop-target-content');
+        if (contentSlot.querySelector('span.italic')) {
+          contentSlot.innerHTML = '';
+        }
+
+        // Style correctly dropped item
+        draggedElement.className = 'bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 w-full shadow-sm';
+        draggedElement.draggable = false;
+        draggedElement.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> ${draggedElement.querySelector('span').innerText}`;
+        
+        contentSlot.appendChild(draggedElement);
+
+        if (levelMatchesCount === totalCards) {
+          setTimeout(completeLevel, 400);
+        }
+      } else {
+        playSound('wrong');
+        zone.classList.add('border-red-500');
+        setTimeout(() => zone.classList.remove('border-red-500'), 500);
+      }
+    }
+
+    // Drop Handler for Sequence Builder (Level 2)
+    function handleSequenceDrop(e, totalCards) {
+      e.preventDefault();
+      const zone = e.currentTarget;
+      zone.classList.remove('drag-over');
+
+      if (!draggedElement) return;
+
+      const cardStep = draggedElement.dataset.step;
+      const targetStep = zone.dataset.step;
+
+      if (cardStep === targetStep) {
+        playSound('correct');
+        score += 50;
+        levelMatchesCount++;
+        updateScoreDisplay();
+
+        const contentSlot = zone.querySelector('.drop-target-content');
+        contentSlot.innerHTML = '';
+
+        draggedElement.className = 'bg-amber-950/80 border border-amber-500/50 text-amber-200 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 w-full shadow-sm';
+        draggedElement.draggable = false;
+        draggedElement.innerHTML = `<i class="fa-solid fa-circle-check text-amber-400"></i> ${draggedElement.querySelector('span').innerText}`;
+
+        contentSlot.appendChild(draggedElement);
+
+        if (levelMatchesCount === totalCards) {
+          setTimeout(completeLevel, 400);
+        }
+      } else {
+        playSound('wrong');
+        zone.classList.add('border-red-500');
+        setTimeout(() => zone.classList.remove('border-red-500'), 500);
+      }
+    }
+
+    // --- TOUCHSCREEN DRAG EMULATION FOR SMARTBOARDS & PHONES ---
+    function setupTouchEvents(card) {
+      let touchStartX, touchStartY;
+      let initialLeft, initialTop;
+      let clone = null;
+
+      card.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+
+        draggedElement = card;
+        playSound('drag');
+
+        // Create a floating clone for touch movement feedback
+        clone = card.cloneNode(true);
+        clone.style.position = 'fixed';
+        clone.style.left = `${touchStartX - 50}px`;
+        clone.style.top = `${touchStartY - 20}px`;
+        clone.style.zIndex = '1000';
+        clone.style.opacity = '0.9';
+        clone.style.pointerEvents = 'none';
+        clone.style.width = `${card.offsetWidth}px`;
+        document.body.appendChild(clone);
+
+        card.classList.add('opacity-30');
+      }, { passive: true });
+
+      card.addEventListener('touchmove', (e) => {
+        if (!clone) return;
+        const touch = e.touches[0];
+        clone.style.left = `${touch.clientX - 50}px`;
+        clone.style.top = `${touch.clientY - 20}px`;
+      }, { passive: true });
+
+      card.addEventListener('touchend', (e) => {
+        if (clone) {
+          clone.remove();
+          clone = null;
+        }
+        card.classList.remove('opacity-30');
+
+        const touch = e.changedTouches[0];
+        const targetDropZone = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.drop-zone');
+
+        if (targetDropZone) {
+          if (currentLevel === 1 || currentLevel === 3) {
+            handleCategoryDrop({ preventDefault: () => {}, currentTarget: targetDropZone }, currentLevel === 1 ? level1Cards.length : level3Cards.length);
+          } else if (currentLevel === 2) {
+            handleSequenceDrop({ preventDefault: () => {}, currentTarget: targetDropZone }, level2Sequence.length);
+          }
+        }
+        draggedElement = null;
+      });
+    }
+
+    function updateScoreDisplay() {
+      document.getElementById('gameScore').innerText = score;
+    }
+
+    // --- LEVEL COMPLETE & VICTORY ---
+    function completeLevel() {
+      playSound('win');
+      document.getElementById('victoryScore').innerText = score;
+
+      const title = document.getElementById('victoryTitle');
+      const desc = document.getElementById('victoryDesc');
+      const nextBtn = document.getElementById('victoryNextBtn');
+
+      if (currentLevel < 3) {
+        title.innerText = `Level ${currentLevel} Selesai!`;
+        desc.innerText = `Luar biasa! Pemahamanmu mengenai strategi dan manfaat aktivitas jasmani sangat presisi. Siap lanjut?`;
+        nextBtn.innerHTML = `Lanjut Level ${currentLevel + 1} <i class="fa-solid fa-arrow-right ml-1"></i>`;
+        nextBtn.onclick = () => {
+          document.getElementById('victoryModal').classList.add('hidden');
+          initLevel(currentLevel + 1);
+        };
+      } else {
+        title.innerText = `SELAMAT! KELULUSAN MISI`;
+        desc.innerText = `Selamat ${studentData.name}! Kamu telah menyelesaikan seluruh evaluasi modul Manfaat Aktivitas Jasmani & Strategi Kolaborasi Tim PJOK SMA Kelas F!`;
+        nextBtn.innerHTML = `<i class="fa-solid fa-rotate-right ml-1"></i> Main Lagi / Pilihan Level`;
+        nextBtn.onclick = () => {
+          document.getElementById('victoryModal').classList.add('hidden');
+          startLevelSelect();
+        };
+      }
+
+      document.getElementById('victoryModal').classList.remove('hidden');
+    }
+
+    function nextLevelAction() {
+      document.getElementById('victoryModal').classList.add('hidden');
+      if (currentLevel < 3) {
+        initLevel(currentLevel + 1);
+      } else {
+        startLevelSelect();
+      }
+    }
+  </script>
+</body>
+</html>
